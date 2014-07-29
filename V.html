@@ -1,0 +1,140 @@
+<!DOCTYPE html >
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+  <title>V</title>
+  <script type="text/javascript" src="http://maps.google.com/maps/api/js?libraries=geometry&sensor=false"></script>
+  <script src="http://www.google.com/jsapi" type="text/javascript"></script>
+  <script type="text/javascript">google.load('search', '1');</script>
+  <script type="text/javascript">
+/*
+http://code.google.com/apis/maps/documentation/javascript/
+http://www.garshol.priv.no/blog/17.html
+http://code.google.com/apis/maps/articles/phpsqlajax_v3.html
+http://code.google.com/apis/maps/documentation/javascript/examples/index.html
+
+http://labs.google.com/ridefinder/images/mm_20_blue.png'
+http://labs.google.com/ridefinder/images/mm_20_shadow.png
+
+geocoding:
+http://code.google.com/apis/maps/documentation/geocoding/
+http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&sensor=false
+*/
+
+  var map;
+  var spherical;
+  var markers = [];
+
+  function clearMarkets() {
+    for (var i = 0; i < markers.length; i++) {
+      markers[i].setMap(null);
+    } 
+    markers = []; 
+  }
+
+  function addMarker(point) {
+    var icon = { icon: 'mm_20_blue.png', shadow: 'mm_20_shadow.png'};
+    var marker = new google.maps.Marker({
+      map: map,
+      position: point,
+      icon: icon.icon,
+      shadow: icon.shadow
+    });
+    markers.push(marker);
+  }
+
+  function init() {
+    map = new google.maps.Map(document.getElementById("map"), {
+      center: new google.maps.LatLng(46.5234571,6.6327518),
+      zoom: 19,
+//      mapTypeId: 'roadmap'
+      mapTypeId: 'hybrid'
+    });
+//    map.addControl(new google.maps.LocalSearch());
+//    map.enableGoogleBar();
+
+    spherical = google.maps.geometry.spherical; 
+        
+    google.maps.event.addListener(map, 'click', function(event) {
+      document.getElementById("lng").value = event.latLng.lng();
+      document.getElementById("lat").value = event.latLng.lat();
+      setTimeout("showV()", 100);
+    });
+        
+    showV();
+  }
+
+  function parseNumber(id) {
+    var num = parseFloat(document.getElementById(id).value);
+    if (num == NaN) {
+      // todo: show validation error
+    }
+    return num;
+  }
+
+  function showV() {
+    clearMarkets();
+    var initPoint = new google.maps.LatLng(parseNumber("lat"), parseNumber("lng"));
+    var cols = parseNumber("cols");
+    var cols = parseNumber("cols");
+    var rows = parseNumber("rows");
+    var heading = parseNumber("heading");
+    var angle = parseNumber("angle");
+    var offsetCol = parseNumber("offsetCol");
+    var offsetRow = parseNumber("offsetRow");
+    
+    document.getElementById("nbrPersons").value = cols * rows * 2;
+    
+
+    for (var row = 0; row < rows; row++) {
+      for (var col = 0; col < cols; col++) {
+        addMarker(spherical.computeOffset(spherical.computeOffset(initPoint, offsetCol*col, heading-90), offsetRow*row, heading-angle/2));
+        addMarker(spherical.computeOffset(spherical.computeOffset(initPoint, offsetCol*col, heading+90), offsetRow*row, heading+angle/2));
+      }
+    }
+  }
+  
+  // view-source:http://code.google.com/apis/maps/documentation/javascript/examples/geocoding-simple.html
+  geocoder = new google.maps.Geocoder();
+  function codeAddress() {
+    var address = document.getElementById("address").value;
+    geocoder.geocode( { 'address': address}, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+        map.setCenter(results[0].geometry.location);
+        map.setZoom(20);
+        var marker = new google.maps.Marker({
+            map: map, 
+            position: results[0].geometry.location
+        });
+      } else {
+        alert("Geocode was not successful for the following reason: " + status);
+      }
+    });
+  }
+  </script>
+  </head>
+
+  <body onload="init()">
+    START.<BR>
+    <input id="address" type="textbox" value="Place de la Riponne, Lausanne, Switzerland">
+    <input type="button" value="Go" onclick="codeAddress()">
+
+    lat: <input id="lat" value="46.52332" size="10" onchange="showV()">, 
+    lng: <input id="lng" value="6.63285" size="10" onchange="showV()">, 
+    columnes: <input id="cols" value="3" size="3" onchange="showV()">, 
+    files: <input id="rows" value="40" size="4" onchange="showV()">, 
+    direccio en graus: <input id="heading" value="25" size="3" onchange="showV()">,
+    angle: <input id="angle" value="30"  size="3" onchange="showV()">,
+    distancia col en metres: <input id="offsetCol" value="1" size="2" onchange="showV()">,
+    distancia fila en metres: <input id="offsetRow" value="1" size="2" onchange="showV()">,
+    total persones: <input id="nbrPersons" size="4" readonly>
+    
+
+    <div id="map" style="width: 90%; height: 800px"></div>
+    <img src='mm_20_blue.png'>Precise parsed address</img>
+    <img src='mm_20_red.png'>Not precise parsed address</img>
+    <BR>
+    END.
+  </body>
+</html>
+
