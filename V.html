@@ -39,19 +39,10 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
         
     geocoder = new google.maps.Geocoder();
 
-    google.maps.event.addListener(map, 'click', function(event) {
-      setField("v_lng", event.latLng.lng());
-      setField("v_lat", event.latLng.lat());
-      setTimeout("showV()", 100);
-    });
+    google.maps.event.addListener(map, 'click', vCenterChanged);
     
-    google.maps.event.addListener(map, 'idle', function(event) {
-      var bounds = map.getBounds();
-      var center = bounds.getCenter();
-      setField("map_lng", center.lng());
-      setField("map_lat", center.lat());
-    });
-    
+    google.maps.event.addListener(map, 'idle', mapCenterChanged);
+
     useHashParameters();
     
     showV();
@@ -87,38 +78,68 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     document.getElementById(id).value = value;
   }
 
+  function parseParamtersFromFields() {
+    var p = {};
+    p.cols = getNumber("cols");
+    p.rows = getNumber("rows");
+    p.heading = getNumber("heading");
+    p.angle = getNumber("angle");
+    p.offsetCol = getNumber("offsetCol");
+    p.offsetRow = getNumber("offsetRow");
+    p.vLat = getNumber("v_lat");
+    p.vLng = getNumber("v_lng");
+    p.mapLat = getNumber("map_lat");
+    p.mapLng = getNumber("map_lng");
+
+    if (isNaN(p.cols) || isNaN(p.rows) || isNaN(p.heading) || isNaN(p.angle) || isNaN(p.offsetCol) || isNaN(p.offsetRow) || isNaN(p.vLat) || isNaN(p.vLng) || isNaN(p.mapLat) || isNaN(p.mapLng)) {
+      return null;
+    }
+
+    return p;
+  }
+
   function showV() {
     clearMarkets();
-    var cols = getNumber("cols");
-    var rows = getNumber("rows");
-    var heading = getNumber("heading");
-    var angle = getNumber("angle");
-    var offsetCol = getNumber("offsetCol");
-    var offsetRow = getNumber("offsetRow");
-    var vLat = getNumber("v_lat");
-    var vLng = getNumber("v_lng");
-    var mapLat = getNumber("map_lat");
-    var mapLng = getNumber("map_lng");
+    var p = parseParamtersFromFields();
     
-    if (isNaN(cols) || isNaN(rows) || isNaN(heading) || isNaN(angle) || isNaN(offsetCol) || isNaN(offsetRow) || isNaN(vLat) || isNaN(vLng) || isNaN(mapLat) || isNaN(mapLng)) {
+    if (p == null) {
       setField("nbrPersons", "valors incorrectes");
       return;
     }
-    
-    setField("nbrPersons", cols * rows * 2);
-    map.setCenter(new google.maps.LatLng(mapLat, mapLng));
-    var initPoint = new google.maps.LatLng(vLat, vLng);
 
-    for (var row = 0; row < rows; row++) {
-      for (var col = 0; col < cols; col++) {
-        addMarker(spherical.computeOffset(spherical.computeOffset(initPoint, offsetCol*col, heading-90), offsetRow*row, heading-angle/2));
-        addMarker(spherical.computeOffset(spherical.computeOffset(initPoint, offsetCol*col, heading+90), offsetRow*row, heading+angle/2));
+    setUrlHash(p);
+    
+    setField("nbrPersons", p.cols * p.rows * 2);
+    map.setCenter(new google.maps.LatLng(p.mapLat, p.mapLng));
+    var initPoint = new google.maps.LatLng(p.vLat, p.vLng);
+
+    for (var row = 0; row < p.rows; row++) {
+      for (var col = 0; col < p.cols; col++) {
+        addMarker(spherical.computeOffset(spherical.computeOffset(initPoint, p.offsetCol*col, p.heading-90), p.offsetRow*row, p.heading-p.angle/2));
+        addMarker(spherical.computeOffset(spherical.computeOffset(initPoint, p.offsetCol*col, p.heading+90), p.offsetRow*row, p.heading+p.angle/2));
       }
     }
-    
-    window.location.hash = "#v_lat=" + vLat + "&v_lng=" + vLng + "&map_lat=" + mapLat + "&map_lng=" + mapLng + "&cols=" + cols + "&rows=" + rows + "&heading=" + heading + "&angle=" + angle + "&offsetCol=" + offsetCol + "&offsetRow=" + offsetRow;
+  }
+
+  function mapCenterChanged(event) {
+    var bounds = map.getBounds();
+    var center = bounds.getCenter();
+    setField("map_lng", center.lng());
+    setField("map_lat", center.lat());
+    setUrlHash(parseParamtersFromFields());
   }
   
+  function vCenterChanged(event) {
+    setField("v_lng", event.latLng.lng());
+    setField("v_lat", event.latLng.lat());
+    setTimeout("showV()", 100);
+  }
+
+
+  function setUrlHash(p) {
+    window.location.hash = "#v_lat=" + p.vLat + "&v_lng=" + p.vLng + "&map_lat=" + p.mapLat + "&map_lng=" + p.mapLng + "&cols=" + p.cols + "&rows=" + p.rows + "&heading=" + p.heading + "&angle=" + p.angle + "&offsetCol=" + p.offsetCol + "&offsetRow=" + p.offsetRow;
+  }
+    
   function useHashParameters() {
     var re = /^v_lat=([\d.]+)&v_lng=([\d.]+)&map_lat=([\d.]+)&map_lng=([\d.]+)&cols=([\d.]+)&rows=([\d.]+)&heading=([\d.]+)&angle=([\d.]+)&offsetCol=([\d.]+)&offsetRow=([\d.]+)$/;
     var found = window.location.hash.substring(1).match(re);
@@ -127,14 +148,14 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     }
     setField("v_lat", found[1]);
     setField("v_lng", found[2]);
-    setField("map_lat", found[2]);
-    setField("map_lng", found[3]);
-    setField("cols", found[4]);
-    setField("rows", found[5]);
-    setField("heading", found[6]);
-    setField("angle", found[7]);
-    setField("offsetCol", found[8]);
-    setField("offsetRow", found[9]);
+    setField("map_lat", found[3]);
+    setField("map_lng", found[4]);
+    setField("cols", found[5]);
+    setField("rows", found[6]);
+    setField("heading", found[7]);
+    setField("angle", found[8]);
+    setField("offsetCol", found[9]);
+    setField("offsetRow", found[10]);
   }
   
   // view-source:http://code.google.com/apis/maps/documentation/javascript/examples/geocoding-simple.html
