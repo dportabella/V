@@ -36,66 +36,12 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     });
 
     spherical = google.maps.geometry.spherical; 
-        
     geocoder = new google.maps.Geocoder();
-
     google.maps.event.addListener(map, 'click', vCenterChanged);
-    
     google.maps.event.addListener(map, 'idle', mapCenterChanged);
 
     useHashParameters();
-    
     showV();
-  }
-
-  function clearMarkets() {
-    for (var i = 0; i < markers.length; i++) {
-      markers[i].setMap(null);
-    } 
-    markers = []; 
-  }
-
-  function addMarker(point) {
-    var icon = { icon: 'mm_20_blue.png', shadow: 'mm_20_shadow.png'};
-    var marker = new google.maps.Marker({
-      map: map,
-      position: point,
-      icon: icon.icon,
-      shadow: icon.shadow
-    });
-    markers.push(marker);
-  }
-
-  function getNumber(id) {
-    var num = parseFloat(document.getElementById(id).value);
-    if (num == NaN) {
-      // todo: show validation error
-    }
-    return num;
-  }
-  
-  function setField(id, value) {
-    document.getElementById(id).value = value;
-  }
-
-  function parseParamtersFromFields() {
-    var p = {};
-    p.cols = getNumber("cols");
-    p.rows = getNumber("rows");
-    p.heading = getNumber("heading");
-    p.angle = getNumber("angle");
-    p.offsetCol = getNumber("offsetCol");
-    p.offsetRow = getNumber("offsetRow");
-    p.vLat = getNumber("v_lat");
-    p.vLng = getNumber("v_lng");
-    p.mapLat = getNumber("map_lat");
-    p.mapLng = getNumber("map_lng");
-
-    if (isNaN(p.cols) || isNaN(p.rows) || isNaN(p.heading) || isNaN(p.angle) || isNaN(p.offsetCol) || isNaN(p.offsetRow) || isNaN(p.vLat) || isNaN(p.vLng) || isNaN(p.mapLat) || isNaN(p.mapLng)) {
-      return null;
-    }
-
-    return p;
   }
 
   function showV() {
@@ -135,6 +81,43 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     setTimeout("showV()", 100);
   }
 
+  function clearMarkets() {
+    for (var i = 0; i < markers.length; i++) {
+      markers[i].setMap(null);
+    } 
+    markers = []; 
+  }
+
+  function addMarker(point) {
+    var icon = { icon: 'mm_20_blue.png', shadow: 'mm_20_shadow.png'};
+    var marker = new google.maps.Marker({
+      map: map,
+      position: point,
+      icon: icon.icon,
+      shadow: icon.shadow
+    });
+    markers.push(marker);
+  }
+
+  function parseParamtersFromFields() {
+    var p = {};
+    p.cols = getNumber("cols");
+    p.rows = getNumber("rows");
+    p.heading = getNumber("heading");
+    p.angle = getNumber("angle");
+    p.offsetCol = getNumber("offsetCol");
+    p.offsetRow = getNumber("offsetRow");
+    p.vLat = getNumber("v_lat");
+    p.vLng = getNumber("v_lng");
+    p.mapLat = getNumber("map_lat");
+    p.mapLng = getNumber("map_lng");
+
+    if (isNaN(p.cols) || isNaN(p.rows) || isNaN(p.heading) || isNaN(p.angle) || isNaN(p.offsetCol) || isNaN(p.offsetRow) || isNaN(p.vLat) || isNaN(p.vLng) || isNaN(p.mapLat) || isNaN(p.mapLng)) {
+      return null;
+    }
+
+    return p;
+  }
 
   function setUrlHash(p) {
     window.location.hash = "#v_lat=" + p.vLat + "&v_lng=" + p.vLng + "&map_lat=" + p.mapLat + "&map_lng=" + p.mapLng + "&cols=" + p.cols + "&rows=" + p.rows + "&heading=" + p.heading + "&angle=" + p.angle + "&offsetCol=" + p.offsetCol + "&offsetRow=" + p.offsetRow;
@@ -158,6 +141,18 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     setField("offsetRow", found[10]);
   }
   
+  function getNumber(id) {
+    var num = parseFloat(document.getElementById(id).value);
+    if (num == NaN) {
+      // todo: show validation error
+    }
+    return num;
+  }
+  
+  function setField(id, value) {
+    document.getElementById(id).value = value;
+  }
+
   // view-source:http://code.google.com/apis/maps/documentation/javascript/examples/geocoding-simple.html
   function codeAddress() {
     var address = document.getElementById("address").value;
