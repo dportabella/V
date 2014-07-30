@@ -40,11 +40,13 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     geocoder = new google.maps.Geocoder();
 
     google.maps.event.addListener(map, 'click', function(event) {
-      document.getElementById("lng").value = event.latLng.lng();
-      document.getElementById("lat").value = event.latLng.lat();
+      setField("lng", event.latLng.lng());
+      setField("lat", event.latLng.lat());
       setTimeout("showV()", 100);
     });
-        
+    
+    useHashParameters();
+    
     showV();
   }
 
@@ -66,31 +68,35 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     markers.push(marker);
   }
 
-  function parseNumber(id) {
+  function getNumber(id) {
     var num = parseFloat(document.getElementById(id).value);
     if (num == NaN) {
       // todo: show validation error
     }
     return num;
   }
+  
+  function setField(id, value) {
+    document.getElementById(id).value = value;
+  }
 
   function showV() {
     clearMarkets();
-    var lat = parseNumber("lat");
-    var lng = parseNumber("lng");
-    var cols = parseNumber("cols");
-    var rows = parseNumber("rows");
-    var heading = parseNumber("heading");
-    var angle = parseNumber("angle");
-    var offsetCol = parseNumber("offsetCol");
-    var offsetRow = parseNumber("offsetRow");
+    var lat = getNumber("lat");
+    var lng = getNumber("lng");
+    var cols = getNumber("cols");
+    var rows = getNumber("rows");
+    var heading = getNumber("heading");
+    var angle = getNumber("angle");
+    var offsetCol = getNumber("offsetCol");
+    var offsetRow = getNumber("offsetRow");
     
     if (isNaN(lat) || isNaN(lng) || isNaN(cols) || isNaN(rows) || isNaN(heading) || isNaN(angle) || isNaN(offsetCol) || isNaN(offsetRow)) {
-      document.getElementById("nbrPersons").value = "valors incorrectes";
+      setField("nbrPersons", "valors incorrectes");
       return;
     }
     
-    document.getElementById("nbrPersons").value = cols * rows * 2;
+    setField("nbrPersons", cols * rows * 2);
     var initPoint = new google.maps.LatLng(lat, lng);
 
     for (var row = 0; row < rows; row++) {
@@ -99,6 +105,24 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
         addMarker(spherical.computeOffset(spherical.computeOffset(initPoint, offsetCol*col, heading+90), offsetRow*row, heading+angle/2));
       }
     }
+    
+    window.location.hash = "#lat=" + lat + "&lng=" + lng + "&cols=" + cols + "&rows=" + rows + "&heading=" + heading + "&angle=" + angle + "&offsetCol=" + offsetCol + "&offsetRow=" + offsetRow;
+  }
+  
+  function useHashParameters() {
+    var re = /^lat=([\d.]+)&lng=([\d.]+)&cols=([\d.]+)&rows=([\d.]+)&heading=([\d.]+)&angle=([\d.]+)&offsetCol=([\d.]+)&offsetRow=([\d.]+)$/;
+    var found = window.location.hash.substring(1).match(re);
+    if (!found) {
+      return;
+    }
+    setField("lat", found[1]);
+    setField("lng", found[2]);
+    setField("cols", found[3]);
+    setField("rows", found[4]);
+    setField("heading", found[5]);
+    setField("angle", found[6]);
+    setField("offsetCol", found[7]);
+    setField("offsetRow", found[8]);
   }
   
   // view-source:http://code.google.com/apis/maps/documentation/javascript/examples/geocoding-simple.html
@@ -139,4 +163,3 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     END.
   </body>
 </html>
-
