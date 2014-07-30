@@ -40,9 +40,16 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     geocoder = new google.maps.Geocoder();
 
     google.maps.event.addListener(map, 'click', function(event) {
-      setField("lng", event.latLng.lng());
-      setField("lat", event.latLng.lat());
+      setField("v_lng", event.latLng.lng());
+      setField("v_lat", event.latLng.lat());
       setTimeout("showV()", 100);
+    });
+    
+    google.maps.event.addListener(map, 'idle', function(event) {
+      var bounds = map.getBounds();
+      var center = bounds.getCenter();
+      setField("map_lng", center.lng());
+      setField("map_lat", center.lat());
     });
     
     useHashParameters();
@@ -82,22 +89,25 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
 
   function showV() {
     clearMarkets();
-    var lat = getNumber("lat");
-    var lng = getNumber("lng");
     var cols = getNumber("cols");
     var rows = getNumber("rows");
     var heading = getNumber("heading");
     var angle = getNumber("angle");
     var offsetCol = getNumber("offsetCol");
     var offsetRow = getNumber("offsetRow");
+    var vLat = getNumber("v_lat");
+    var vLng = getNumber("v_lng");
+    var mapLat = getNumber("map_lat");
+    var mapLng = getNumber("map_lng");
     
-    if (isNaN(lat) || isNaN(lng) || isNaN(cols) || isNaN(rows) || isNaN(heading) || isNaN(angle) || isNaN(offsetCol) || isNaN(offsetRow)) {
+    if (isNaN(cols) || isNaN(rows) || isNaN(heading) || isNaN(angle) || isNaN(offsetCol) || isNaN(offsetRow) || isNaN(vLat) || isNaN(vLng) || isNaN(mapLat) || isNaN(mapLng)) {
       setField("nbrPersons", "valors incorrectes");
       return;
     }
     
     setField("nbrPersons", cols * rows * 2);
-    var initPoint = new google.maps.LatLng(lat, lng);
+    map.setCenter(new google.maps.LatLng(mapLat, mapLng));
+    var initPoint = new google.maps.LatLng(vLat, vLng);
 
     for (var row = 0; row < rows; row++) {
       for (var col = 0; col < cols; col++) {
@@ -106,23 +116,25 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
       }
     }
     
-    window.location.hash = "#lat=" + lat + "&lng=" + lng + "&cols=" + cols + "&rows=" + rows + "&heading=" + heading + "&angle=" + angle + "&offsetCol=" + offsetCol + "&offsetRow=" + offsetRow;
+    window.location.hash = "#v_lat=" + v_lat + "&v_lng=" + "&map_lat=" + map_lat + "&map_lng=" + map_lng + "&cols=" + cols + "&rows=" + rows + "&heading=" + heading + "&angle=" + angle + "&offsetCol=" + offsetCol + "&offsetRow=" + offsetRow;
   }
   
   function useHashParameters() {
-    var re = /^lat=([\d.]+)&lng=([\d.]+)&cols=([\d.]+)&rows=([\d.]+)&heading=([\d.]+)&angle=([\d.]+)&offsetCol=([\d.]+)&offsetRow=([\d.]+)$/;
+    var re = /^v_lat=([\d.]+)&v_lng=([\d.]+)&map_lat=([\d.]+)&map_lng=([\d.]+)&cols=([\d.]+)&rows=([\d.]+)&heading=([\d.]+)&angle=([\d.]+)&offsetCol=([\d.]+)&offsetRow=([\d.]+)$/;
     var found = window.location.hash.substring(1).match(re);
     if (!found) {
       return;
     }
-    setField("lat", found[1]);
-    setField("lng", found[2]);
-    setField("cols", found[3]);
-    setField("rows", found[4]);
-    setField("heading", found[5]);
-    setField("angle", found[6]);
-    setField("offsetCol", found[7]);
-    setField("offsetRow", found[8]);
+    setField("v_lat", found[1]);
+    setField("v_lng", found[2]);
+    setField("map_lat", found[2]);
+    setField("map_lng", found[3]);
+    setField("cols", found[4]);
+    setField("rows", found[5]);
+    setField("heading", found[6]);
+    setField("angle", found[7]);
+    setField("offsetCol", found[8]);
+    setField("offsetRow", found[9]);
   }
   
   // view-source:http://code.google.com/apis/maps/documentation/javascript/examples/geocoding-simple.html
@@ -149,15 +161,18 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     <input id="address" type="textbox" value="Place de la Riponne, Lausanne, Switzerland">
     <input type="button" value="Go" onclick="codeAddress()">
 
-    lat: <input id="lat" value="46.52332" size="10" onchange="showV()">, 
-    lng: <input id="lng" value="6.63285" size="10" onchange="showV()">, 
     columnes: <input id="cols" value="3" size="3" onchange="showV()">, 
     files: <input id="rows" value="40" size="4" onchange="showV()">, 
     direccio en graus: <input id="heading" value="25" size="3" onchange="showV()">,
     angle: <input id="angle" value="30"  size="3" onchange="showV()">,
     distancia col en metres: <input id="offsetCol" value="1" size="2" onchange="showV()">,
     distancia fila en metres: <input id="offsetRow" value="1" size="2" onchange="showV()">,
+    V lat: <input id="v_lat" value="46.52332" size="10" onchange="showV()">, 
+    V lng: <input id="v_lng" value="6.63285" size="10" onchange="showV()">, 
+    mapa lat: <input id="map_lat" value="46.5234571" size="10" onchange="showV()">, 
+    mapa lng: <input id="map_lng" value="6.6327518" size="10" onchange="showV()">, 
     total persones: <input id="nbrPersons" size="20" readonly>
+
 
     <div id="map" style="width: 90%; height: 800px"></div>
     END.
