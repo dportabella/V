@@ -7,6 +7,7 @@
   <script src="http://www.google.com/jsapi" type="text/javascript"></script>
   <script type="text/javascript">google.load('search', '1');</script>
   <script type="text/javascript">
+
 /*
 http://code.google.com/apis/maps/documentation/javascript/
 http://www.garshol.priv.no/blog/17.html
@@ -23,7 +24,29 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
 
   var map;
   var spherical;
+  var geocoder;
   var markers = [];
+
+  function init() {
+    map = new google.maps.Map(document.getElementById("map"), {
+      center: new google.maps.LatLng(46.5234571,6.6327518),
+      zoom: 19,
+//      mapTypeId: 'roadmap'
+      mapTypeId: 'hybrid'
+    });
+
+    spherical = google.maps.geometry.spherical; 
+        
+    geocoder = new google.maps.Geocoder();
+
+    google.maps.event.addListener(map, 'click', function(event) {
+      document.getElementById("lng").value = event.latLng.lng();
+      document.getElementById("lat").value = event.latLng.lat();
+      setTimeout("showV()", 100);
+    });
+        
+    showV();
+  }
 
   function clearMarkets() {
     for (var i = 0; i < markers.length; i++) {
@@ -43,27 +66,6 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     markers.push(marker);
   }
 
-  function init() {
-    map = new google.maps.Map(document.getElementById("map"), {
-      center: new google.maps.LatLng(46.5234571,6.6327518),
-      zoom: 19,
-//      mapTypeId: 'roadmap'
-      mapTypeId: 'hybrid'
-    });
-//    map.addControl(new google.maps.LocalSearch());
-//    map.enableGoogleBar();
-
-    spherical = google.maps.geometry.spherical; 
-        
-    google.maps.event.addListener(map, 'click', function(event) {
-      document.getElementById("lng").value = event.latLng.lng();
-      document.getElementById("lat").value = event.latLng.lat();
-      setTimeout("showV()", 100);
-    });
-        
-    showV();
-  }
-
   function parseNumber(id) {
     var num = parseFloat(document.getElementById(id).value);
     if (num == NaN) {
@@ -74,8 +76,8 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
 
   function showV() {
     clearMarkets();
-    var initPoint = new google.maps.LatLng(parseNumber("lat"), parseNumber("lng"));
-    var cols = parseNumber("cols");
+    var lat = parseNumber("lat");
+    var lng = parseNumber("lng");
     var cols = parseNumber("cols");
     var rows = parseNumber("rows");
     var heading = parseNumber("heading");
@@ -83,8 +85,13 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     var offsetCol = parseNumber("offsetCol");
     var offsetRow = parseNumber("offsetRow");
     
-    document.getElementById("nbrPersons").value = cols * rows * 2;
+    if (isNaN(lat) || isNaN(lng) || isNaN(cols) || isNaN(rows) || isNaN(heading) || isNaN(angle) || isNaN(offsetCol) || isNaN(offsetRow)) {
+      document.getElementById("nbrPersons").value = "valors incorrectes";
+      return;
+    }
     
+    document.getElementById("nbrPersons").value = cols * rows * 2;
+    var initPoint = new google.maps.LatLng(lat, lng);
 
     for (var row = 0; row < rows; row++) {
       for (var col = 0; col < cols; col++) {
@@ -95,7 +102,6 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
   }
   
   // view-source:http://code.google.com/apis/maps/documentation/javascript/examples/geocoding-simple.html
-  geocoder = new google.maps.Geocoder();
   function codeAddress() {
     var address = document.getElementById("address").value;
     geocoder.geocode( { 'address': address}, function(results, status) {
@@ -127,13 +133,9 @@ http://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkw
     angle: <input id="angle" value="30"  size="3" onchange="showV()">,
     distancia col en metres: <input id="offsetCol" value="1" size="2" onchange="showV()">,
     distancia fila en metres: <input id="offsetRow" value="1" size="2" onchange="showV()">,
-    total persones: <input id="nbrPersons" size="4" readonly>
-    
+    total persones: <input id="nbrPersons" size="20" readonly>
 
     <div id="map" style="width: 90%; height: 800px"></div>
-    <img src='mm_20_blue.png'>Precise parsed address</img>
-    <img src='mm_20_red.png'>Not precise parsed address</img>
-    <BR>
     END.
   </body>
 </html>
